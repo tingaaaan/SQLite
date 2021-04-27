@@ -10,29 +10,30 @@ def home():
 def new_student():
     return render_template('student.html')
 
-@app.route('/addrec', methods=['POST', 'GET'])
+@app.route('/addrec', methods=['POST'])
 def addrec():
+    con = sql.connect("database.db")
+    msg = "新增失敗"
     if request.method == 'POST':
         try:
             nm = request.form['nm']
-            addr = request.form['addr']
+            addr = request.form['add']
             city = request.form['city']
             pin = request.form['pin']
 
-            with sql.connect("database.db") as con:
-                cur = con.cursor()
-                cur.execute(
-                    "INSERT INTO students(name, addr, city, pin) VALUES(?, ?, ?, ?), (nm, addr, city, pin)"
+            cur = con.cursor()
+            cur.execute(
+                "INSERT INTO students(name, addr, city, pin) VALUES(?, ?, ?, ?)", (nm, addr, city, pin)
                 )
-                con.commit()
-                msg = "新增成功"
-        except:
+            con.commit()
+            msg = "新增成功"
+        except Exception as e:
             con.rollback()
-            msg = "新增失敗"
+            print(e)
 
-        finally:
-            return render_template("result.html", msg=msg)
-            con.close()
+        con.close()
+        return render_template("result.html", msg=msg)
+            
 
 @app.route('/list')
 def list():
@@ -40,7 +41,7 @@ def list():
     con.row_factory = sql.Row
 
     cur = con.cursor()
-    cur.excute("select * from students")
+    cur.execute("select * from students")
 
     rows = cur.fetchall()
     return render_template("list.html", rows=rows)
