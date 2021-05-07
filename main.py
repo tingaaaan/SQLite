@@ -13,13 +13,16 @@ def new_student():
 @app.route('/addrec', methods=['POST'])
 def addrec():
     con = sql.connect("database.db")
-    msg = "新增失敗"
+    msg = "新增失敗 原因: {}"
     if request.method == 'POST':
         try:
             nm = request.form['nm']
             addr = request.form['add']
             city = request.form['city']
             pin = request.form['pin']
+
+            if len(nm) == 0:
+                raise ValueError("Name can't be empty")
 
             cur = con.cursor()
             cur.execute(
@@ -29,7 +32,7 @@ def addrec():
             msg = "新增成功"
         except Exception as e:
             con.rollback()
-            print(e)
+            msg = msg.format(e)
 
         con.close()
         return render_template("result.html", msg=msg)
